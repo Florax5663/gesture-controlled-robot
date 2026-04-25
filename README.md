@@ -25,4 +25,5 @@ This system operates on a master-slave architecture utilizing two Arduino boards
 4. Ensure all hardware pins match the configurations defined at the top of each sketch.
 
 ---
-*Engineered in C++*
+---
+*Engineered in C++ | Created by [Piuse Samanta](https://florax5663.github.io/my-first-project/)*
