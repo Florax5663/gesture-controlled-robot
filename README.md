@@ -26,4 +26,4 @@ This system operates on a master-slave architecture utilizing two Arduino boards
 
 ---
 ---
-*Engineered in C++ | Created by [Piuse Samanta](https://florax5663.github.io/my-first-project/)*
+*Engineered in C++ | Created by [Piuse Samanta](https://github.com/Florax5663/piuse-portfolio/)*
