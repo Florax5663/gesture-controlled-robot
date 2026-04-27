@@ -41,7 +41,6 @@ int getDistance() {
 }
 
 void setup() {
-  // Upgraded to 115200 for zero-lag printing!
   Serial.begin(115200);
   
   pinMode(ENA, OUTPUT); pinMode(ENB, OUTPUT);
@@ -61,7 +60,7 @@ void setup() {
   radio.startListening();             
 
   Serial.println("====================================");
-  Serial.println("CAR RECEIVER BOOTED: TELEMETRY LIVE");
+  Serial.println("CAR RECEIVER BOOTED: GRAVITY SCALED");
   Serial.println("====================================");
 }
 
@@ -77,7 +76,6 @@ void loop() {
     digitalWrite(IN1, LOW); digitalWrite(IN2, LOW);
     digitalWrite(IN3, LOW); digitalWrite(IN4, LOW);
     
-    // Print every 500ms so it doesn't spam the monitor too fast
     static unsigned long lastFailsafePrint = 0;
     if (millis() - lastFailsafePrint > 500) {
         Serial.println("⚠ FAILSAFE: Connection Lost! Motors Stopped.");
@@ -94,8 +92,8 @@ void loop() {
   // --- COLLISION RADAR ---
   int obstacleDist = getDistance();
   
-  // Auto-Brake Override
-  if (tiltY < -2 && obstacleDist < 15) {
+  // Auto-Brake Override (Threshold 3, Coasting Brake)
+  if (tiltY <= -3 && obstacleDist < 15) {
     analogWrite(ENA, 0); analogWrite(ENB, 0);
     digitalWrite(IN1, LOW); digitalWrite(IN2, LOW);
     digitalWrite(IN3, LOW); digitalWrite(IN4, LOW);
@@ -107,35 +105,41 @@ void loop() {
     return; 
   }
 
-  // --- NORMAL DRIVING LOGIC ---
-  if (tiltY < -2) { 
-    speed = constrain(map(tiltY, -2, -10, 150, 255), 150, 255); 
+  // --- NORMAL DRIVING LOGIC (GRAVITY SCALED) ---
+  
+  // FORWARD (Y is negative: Map -3 to -9)
+  if (tiltY <= -3) { 
+    speed = constrain(map(tiltY, -3, -9, 130, 255), 130, 255); 
     action = "FORWARD";
     analogWrite(ENA, speed); analogWrite(ENB, speed);
     digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH); 
     digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH); 
   }
-  else if (tiltY > 2) {
-    speed = constrain(map(tiltY, 2, 10, 150, 255), 150, 255);
+  // BACKWARD (Y is positive: Map 3 to 9)
+  else if (tiltY >= 3) {
+    speed = constrain(map(tiltY, 3, 9, 130, 255), 130, 255);
     action = "BACKWARD";
     analogWrite(ENA, speed); analogWrite(ENB, speed);
     digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW); 
     digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW); 
   }
-  else if (tiltX > 2) {
-    speed = constrain(map(tiltX, 2, 10, 150, 255), 150, 255);
+  // LEFT (X is positive: Map 3 to 9)
+  else if (tiltX >= 3) {
+    speed = constrain(map(tiltX, 3, 9, 130, 255), 130, 255);
     action = "LEFT";
     analogWrite(ENA, speed); analogWrite(ENB, speed);
     digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW); 
     digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH); 
   }
-  else if (tiltX < -2) {
-    speed = constrain(map(tiltX, -2, -10, 150, 255), 150, 255);
+  // RIGHT (X is negative: Map -3 to -9)
+  else if (tiltX <= -3) {
+    speed = constrain(map(tiltX, -3, -9, 130, 255), 130, 255);
     action = "RIGHT";
     analogWrite(ENA, speed); analogWrite(ENB, speed);
     digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH); 
     digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW); 
   }
+  // STOP (Deadzone between -2 and 2)
   else {
     analogWrite(ENA, 0); analogWrite(ENB, 0);
     digitalWrite(IN1, LOW); digitalWrite(IN2, LOW);
